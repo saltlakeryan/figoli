@@ -1,0 +1,7 @@
+{
+  "name": "figoli-map-position-tests",
+  "private": true,
+  "scripts": {
+    "test:map": "node --test src/test-js/map-position.test.cjs"
+  }
+}

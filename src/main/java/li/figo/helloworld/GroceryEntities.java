@@ -71,13 +71,23 @@ class Aisle {
 class GroceryItem {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY) Long id;
     @Column(nullable = false) String name;
-    @ManyToOne(fetch = FetchType.LAZY) @JoinColumn(name = "store_id") GroceryStore store;
+    @ManyToOne(fetch = FetchType.LAZY) @JoinColumn(name = "owner_id", nullable = true) AppUser owner;
+    protected GroceryItem() {}
+}
+
+@Entity
+@Table(name = "store_item_placements", uniqueConstraints =
+        @UniqueConstraint(name = "uq_store_item_placements_store_item", columnNames = {"store_id", "item_id"}))
+class StoreItemPlacement {
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY) Long id;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false) @JoinColumn(name = "store_id", nullable = false) GroceryStore store;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false) @JoinColumn(name = "item_id", nullable = false) GroceryItem item;
     @ManyToOne(fetch = FetchType.LAZY) @JoinColumn(name = "aisle_id") Aisle aisle;
     @Column(name = "aisle_percent") Integer aislePercent;
     @ManyToMany(fetch = FetchType.LAZY)
-    @JoinTable(name = "item_categories", joinColumns = @JoinColumn(name = "item_id"), inverseJoinColumns = @JoinColumn(name = "category_id"))
+    @JoinTable(name = "store_item_categories", joinColumns = @JoinColumn(name = "placement_id"), inverseJoinColumns = @JoinColumn(name = "category_id"))
     Set<Category> categories = new LinkedHashSet<>();
-    protected GroceryItem() {}
+    protected StoreItemPlacement() {}
 }
 
 @Entity

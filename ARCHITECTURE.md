@@ -22,7 +22,7 @@ Cloudflare Tunnel is enabled with the Compose `tunnel` profile. Its token is rea
 
 - `HelloWorldApplication` starts Spring Boot and detects the one-shot admin CLI mode.
 - `PageController` maps friendly paths such as `/market`, `/login`, `/register`, and `/admin` to static HTML files.
-- `src/main/resources/static` contains the landing page, authentication pages, admin page, and Market Day interface. `app.js` loads the signed-in user's stores and calls the API; it keeps the selected store ID in browser local storage.
+- `src/main/resources/static` contains the landing page, authentication pages, admin page, and Market Day interface. `app.js` loads the signed-in user's stores and calls the API; it keeps the selected store ID in browser local storage. The shopping map displays numbered item buttons; clicking a number optimistically updates every view and persists the checked state through the list-entry PATCH endpoint. `map-position.js` contains the pure positioning helpers used by the map and Node unit tests.
 - `AuthController` handles registration, login, current identity, CSRF token retrieval, and logout.
 - `StoreController` lists and creates stores belonging to the signed-in user.
 - `GroceryController` implements store-scoped categories, aisles, catalog items, shopping lists, and list entries under `/api/stores/{storeId}/...`.
@@ -36,7 +36,7 @@ Accounts use an individual email address and BCrypt password hash. Public regist
 
 Successful logins use a Spring Security session. Spring Session JDBC stores session data in PostgreSQL, allowing a login to survive an app restart. Sessions expire after 90 days of inactivity, and the session cookie is configured for a 90-day lifetime. Session IDs are rotated at login. State-changing requests require the CSRF token cookie and matching request header.
 
-Authenticated API requests are scoped to the current account. Store IDs are checked against store ownership before reading or changing store data; lists are additionally checked against their owner. Items, aisles, and categories must belong to the same store when linked.
+Authenticated store APIs check store ownership before reading or changing store-specific data; lists are additionally checked against their owner. The item catalog is shared globally among authenticated users, while aisle placement and categories are scoped to each store. Items can be added to any user's lists. Item deletion is limited to its creator and is blocked while any list uses it.
 
 Admin bootstrap commands are described in [README.md](README.md). `grant-admin` both approves and promotes an existing account; `create-admin` prompts interactively for a new administrator password.
 
@@ -47,19 +47,21 @@ PostgreSQL is the durable application database, stored in the named `postgres_da
 ```mermaid
 erDiagram
     APP_USERS ||--o{ STORES : owns
+    APP_USERS ||--o{ GROCERY_ITEMS : owns
     STORES ||--o{ AISLES : contains
     STORES ||--o{ CATEGORIES : defines
-    STORES ||--o{ GROCERY_ITEMS : catalogs
+    STORES ||--o{ STORE_ITEM_PLACEMENTS : places
+    GROCERY_ITEMS ||--o{ STORE_ITEM_PLACEMENTS : reusable_item
+    AISLES o|--o{ STORE_ITEM_PLACEMENTS : locates
     STORES ||--o{ SHOPPING_LISTS : scopes
     APP_USERS ||--o{ SHOPPING_LISTS : owns
     AISLES }o--o{ CATEGORIES : tagged_with
-    GROCERY_ITEMS }o--o| AISLES : located_in
-    GROCERY_ITEMS }o--o{ CATEGORIES : tagged_with
+    STORE_ITEM_PLACEMENTS }o--o{ CATEGORIES : tagged_with
     SHOPPING_LISTS ||--o{ SHOPPING_LIST_ENTRIES : contains
     GROCERY_ITEMS ||--o{ SHOPPING_LIST_ENTRIES : selected_as
 ```
 
-Each account can own multiple stores. A store has its own aisle layout, categories, item catalog, and shopping lists. Aisles use grid coordinates, a length, and orientation. Catalog items can reference an aisle and a percentage down that aisle. List entries refer to catalog items and keep a quantity and checked state. Spring Data JPA/Hibernate updates application tables at startup (`spring.jpa.hibernate.ddl-auto=update`); the Spring Session JDBC tables use an idempotent PostgreSQL schema script at `src/main/resources/db/session-schema.sql`.
+Each account can own multiple stores, and all accounts share one global item catalog. Item names are unique without regard to case across the catalog. `owner_id` records the creator for deletion authorization; it does not limit visibility or use. A `StoreItemPlacement` connects an item to a store and holds that store's optional aisle, aisle percentage, and item categories. Users can change an item's aisle placement from the catalog; the aisle selector includes each aisle's category names. Aisles use grid coordinates, a length, and orientation; the layout view expands to contain the furthest aisle extent. Aisles can be created, edited, and deleted. Aisle category entry autocompletes existing store categories and creates any newly entered names when the aisle is saved. Deleting an aisle leaves item placements intact and clears their aisle assignment; items in use by any shopping list cannot be deleted. List entries can refer to any shared catalog item and keep a quantity and checked state. The same checked state is reflected in the map, the “All list items” index, and the list view. Map number positioning is implemented in a DOM-independent helper and covered by isolated Node tests (`npm run test:map`); those unit tests do not measure browser-rendered pixel positions. Bulk item import adds names to the global catalog, one name per line, and does not import categories or store placements. Spring Data JPA/Hibernate updates application tables at startup (`spring.jpa.hibernate.ddl-auto=update`); startup copies existing store-bound item locations/categories into placements and clears the legacy store fields, retaining the old columns and join table. Spring Session JDBC tables use an idempotent PostgreSQL schema script at `src/main/resources/db/session-schema.sql`.
 
 ## Containers and configuration
 
@@ -71,4 +73,4 @@ Each account can own multiple stores. A store has its own aisle layout, categori
 
 Database credentials and the Cloudflare tunnel token belong in the untracked `.env` file. `.env.example` lists the required variables with placeholder values. Never commit `.env`.
 
-Run the application and database locally with `docker compose up --build -d`. Add the tunnel with `docker compose --profile tunnel up --build -d`. The named PostgreSQL volume survives container recreation; `docker compose down -v` removes the volume and its data.
+Build the app image with `docker compose build app`. Run the application and database locally with `docker compose up -d`. Build and run with the Cloudflare Tunnel using `docker compose --profile tunnel up --build -d`. Check status with `docker compose --profile tunnel ps` and logs with `docker compose logs --tail=100 app db cloudflared`. The named PostgreSQL volume survives container recreation; Spring Session JDBC stores login sessions in PostgreSQL as well. `docker compose down -v` removes the database volume and all data.
