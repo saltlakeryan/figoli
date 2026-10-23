@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="en">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#f7f7f3"><title>Market Day — figo.li</title><link rel="stylesheet" href="/styles.css?v=20261022-map-toggle"></head>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#f7f7f3"><title>Market Day — figo.li</title><link rel="stylesheet" href="/styles.css?v=20261022-map-markers2"></head>
 <body class="market-page">
   <header class="app-header"><a class="wordmark" href="/">figo<span>.</span>li</a><span class="header-divider">/</span><span class="app-brand">Market Day</span><span class="header-spacer"></span><a id="admin-link" class="admin-link" href="/admin" hidden>Admin</a><span class="app-user"><i></i><span id="account-email">Account</span></span><button id="logout" class="signout-button">Sign out</button></header>
   <main class="market-shell">
@@ -8,7 +8,7 @@
     <div class="store-toolbar"><label>SHOPPING AT <select id="store-select" aria-label="Select a store"></select></label><button class="button button-outline" id="new-store">＋ Add store</button></div>
     <section id="store-setup" class="store-setup" hidden><span class="empty-icon">✳</span><h2>Your first store</h2><p>Create a store to start building its aisles, catalog, and shopping lists.</p><button class="button button-dark" id="first-store">Create a store</button></section>
     <nav class="tabs" id="market-tabs" aria-label="Market Day sections"><button class="tab active" data-panel="lists">Shopping lists <span id="list-count">0</span></button><button class="tab" data-panel="map">Store layout</button><button class="tab" data-panel="items">Item catalog</button><button class="tab" data-panel="categories">Categories</button></nav>
-    <div id="notice" class="notice" hidden></div>
+    <div id="notice" class="notice" role="alert" aria-live="assertive" hidden></div>
     <section id="panel-lists" class="panel active">
       <div class="panel-title"><div><div class="eyebrow">READY WHEN YOU ARE</div><h2>Your lists</h2></div><button class="button button-dark" id="new-list">＋ New list</button></div>
       <div class="list-layout"><aside class="list-sidebar"><div id="lists" class="list-picker"></div><div class="sidebar-tip"><span>✳</span><p>Your store map helps sort each trip into an easy-to-follow route.</p></div></aside>
@@ -28,6 +28,6 @@
   <dialog id="new-list-dialog" class="modal"><form id="list-form"><button type="button" class="modal-close" aria-label="Close">×</button><div class="eyebrow">PLAN THE NEXT TRIP</div><h2>A fresh list</h2><label>Give this list a name<input name="name" placeholder="e.g. Saturday groceries" required maxlength="80" autofocus></label><div class="modal-actions"><button type="button" class="button button-outline cancel-dialog">Cancel</button><button type="submit" class="button button-dark">Create list</button></div></form></dialog>
   <dialog id="new-store-dialog" class="modal"><form id="store-form"><button type="button" class="modal-close" aria-label="Close">×</button><div class="eyebrow">A PLACE FOR YOUR SHOPPING</div><h2>Add a store</h2><label>Store name<input name="name" placeholder="e.g. Neighborhood Market" required maxlength="100" autofocus></label><div class="modal-actions"><button type="button" class="button button-outline cancel-store">Cancel</button><button type="submit" class="button button-dark">Create store</button></div></form></dialog>
   <dialog id="new-list-item-dialog" class="modal"><form id="new-list-item-form"><button type="button" class="modal-close" aria-label="Close">×</button><div class="eyebrow">ADD TO YOUR SHARED CATALOG</div><h2 id="new-list-item-title">Set an aisle</h2><p class="dialog-copy" id="new-list-item-copy"></p><label>Aisle<select name="aisleId" id="new-list-item-aisle"></select></label><div class="modal-actions"><button type="button" class="button button-outline" id="cancel-new-list-item">Cancel</button><button type="submit" class="button button-dark">Add to list</button></div></form></dialog>
-  <script src="/map-position.js?v=20261022-map-position" defer></script>
-  <script src="/app.js?v=20261022-map-toggle-save" defer></script>
+  <script src="/map-position.js?v=20261022-map-markers2" defer></script>
+  <script src="/app.js?v=20261023-map-store-scope4" defer></script>
 </body></html>

@@ -2,6 +2,7 @@ package li.figo.helloworld;
 
 import java.util.*;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
@@ -34,6 +35,7 @@ class GroceryController {
     record ListInput(String name) {}
     record EntryInput(Long itemId, String quantity) {}
     record CheckedInput(boolean checked) {}
+    record ApiError(String message) {}
 
     @GetMapping("/categories") List<CategoryView> categories(@PathVariable Long storeId, Authentication auth) {
         requireStore(storeId,auth);
@@ -172,10 +174,20 @@ class GroceryController {
         if(duplicate>0) throw new ResponseStatusException(HttpStatus.CONFLICT,"This item is already on the list.");
         ListEntry e=new ListEntry(); e.list=l; e.item=i; e.quantity=(in.quantity()==null||in.quantity().isBlank())?"1":in.quantity().trim(); db.persist(e); db.flush(); return listView(l);
     }
-    @PatchMapping("/entries/{id}") EntryView setChecked(@PathVariable Long storeId,@PathVariable Long id,@RequestBody CheckedInput in, Authentication auth) {
-        ListEntry e=db.find(ListEntry.class,id); if(e==null) throw new ResponseStatusException(HttpStatus.NOT_FOUND);
-        if (!belongsTo(e.list,storeId,auth)) throw new ResponseStatusException(HttpStatus.NOT_FOUND);
-        e.checked=in.checked(); return entryView(e,e.list.store.id);
+    @PatchMapping("/entries/{id}") ResponseEntity<?> setChecked(@PathVariable Long storeId,@PathVariable Long id,@RequestBody CheckedInput in, Authentication auth) {
+        ListEntry e=db.find(ListEntry.class,id); if(e==null) return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ApiError("List item no longer exists. Refresh the list and try again."));
+        db.lock(e,LockModeType.PESSIMISTIC_WRITE);
+        // Read list ownership from the rows directly. Lazy associations have been
+        // observed as null even when these foreign keys are populated in the database.
+        Object[] listScope=(Object[])db.createNativeQuery("select l.store_id,u.email from shopping_lists l left join app_users u on u.id=l.owner_id where l.id=(select list_id from shopping_list_entries where id=:entryId)")
+                .setParameter("entryId",id).getResultStream().findFirst().orElse(null);
+        Long actualStoreId=listScope!=null&&listScope[0] instanceof Number n?n.longValue():null;
+        String listOwnerEmail=listScope==null||listScope[1]==null?null:listScope[1].toString();
+        if(!Objects.equals(actualStoreId,storeId)) return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ApiError("List item belongs to store "+(actualStoreId==null?"none":actualStoreId)+", but this request used store "+storeId+". Refresh the list and try again."));
+        if(listOwnerEmail==null||!listOwnerEmail.equalsIgnoreCase(auth.getName())) return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ApiError("The signed-in account does not own this list. Refresh the list and try again."));
+        try { storeController.ownedStore(storeId,auth); }
+        catch(ResponseStatusException ex) { return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ApiError("The signed-in account does not own this store. Refresh the list and try again.")); }
+        e.checked=in.checked(); db.flush(); return ResponseEntity.ok(entryView(e,actualStoreId));
     }
     @DeleteMapping("/entries/{id}") void deleteEntry(@PathVariable Long storeId,@PathVariable Long id, Authentication auth) { ListEntry e=db.find(ListEntry.class,id); if(e!=null) { if(!belongsTo(e.list,storeId,auth)) throw new ResponseStatusException(HttpStatus.NOT_FOUND); db.remove(e); } }
     @DeleteMapping("/lists/{id}") void deleteList(@PathVariable Long storeId,@PathVariable Long id, Authentication auth) {

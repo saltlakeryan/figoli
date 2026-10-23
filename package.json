@@ -2,6 +2,10 @@
   "name": "figoli-map-position-tests",
   "private": true,
   "scripts": {
-    "test:map": "node --test src/test-js/map-position.test.cjs"
+    "test:map": "node --test src/test-js/map-position.test.cjs",
+    "test:e2e": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.56.1"
   }
 }

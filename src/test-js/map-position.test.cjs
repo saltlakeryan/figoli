@@ -14,19 +14,19 @@ test('distributes items with no saved percentage through the aisle', () => {
   assert.equal(percentForEntry({}, 2, 3), 75);
 });
 
-test('maps vertical aisle percentages to the vertical axis beside the aisle', () => {
+test('maps vertical aisle percentages to the vertical centerline', () => {
   assert.deepEqual(markerStyle('vertical', 35), {
-    left: 'calc(100% + 3px)',
+    left: '50%',
     top: '35%',
-    transform: 'translateY(-50%)'
+    transform: 'translate(-50%, -50%)'
   });
 });
 
-test('maps horizontal aisle percentages to the horizontal axis below the aisle', () => {
+test('maps horizontal aisle percentages to the horizontal centerline', () => {
   assert.deepEqual(markerStyle('horizontal', 65), {
     left: '65%',
-    top: 'calc(100% + 3px)',
-    transform: 'translate(-50%, 0)'
+    top: '50%',
+    transform: 'translate(-50%, -50%)'
   });
 });
 

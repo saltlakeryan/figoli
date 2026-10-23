@@ -13,9 +13,9 @@
   function markerStyle(orientation, percent) {
     const position = `${normalizePercent(percent)}%`;
     if (String(orientation).toLowerCase() === 'horizontal') {
-      return { left: position, top: 'calc(100% + 3px)', transform: 'translate(-50%, 0)' };
+      return { left: position, top: '50%', transform: 'translate(-50%, -50%)' };
     }
-    return { left: 'calc(100% + 3px)', top: position, transform: 'translateY(-50%)' };
+    return { left: '50%', top: position, transform: 'translate(-50%, -50%)' };
   }
 
   const api = { normalizePercent, percentForEntry, markerStyle };
