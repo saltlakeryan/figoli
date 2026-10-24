@@ -1,6 +1,6 @@
 # Handoff: figo.li / Market Day
 
-Updated 2026-10-23.
+Updated 2026-10-24.
 
 ## Project and commands
 
@@ -46,6 +46,8 @@ If installing Node 22 with nvm was interrupted by the machine restart, reopen a 
 - One duplicate `Frozen Orange Chicken` entry was removed from Winco Groceries (the newer row); the earlier row remains. The actual failing PATCH target is `/api/stores/1/entries/23` (`Frozen Corn`), which exists locally on list 3/store 1; list and store owner IDs both match. The PATCH handler now returns distinct messages for a missing entry, wrong store, wrong list owner, or wrong store owner. After a hard refresh and retry, use the response message to continue diagnosing.
 - Follow-up then produced a 500 for `/api/stores/1/entries/6`. The app trace showed `e.list.owner` was null despite list 3 having `owner_id=1` in PostgreSQL. `setChecked` now reads both store ID and owner email together from `shopping_lists` joined to `app_users`, and no longer relies on either lazy association for authorization. The controller test reproduces null `list.store` and `list.owner` associations with valid persisted scope data. `mvn test` passed in the Maven container (1 test). Anonymous curl still cannot test the authenticated route (403); user confirmation is needed to verify in the signed-in app. Entry 6 was unchecked in the database during diagnosis.
 - Map numbers now sit on aisle centerlines. `npm run test:map` passes with the updated expected positions.
+- “Shopping mode” now opens `/market/shopping?storeId=…&listId=…`, a dedicated, low-chrome page for checking items. It has a map-aligned, zoomable/pannable “All list items” canvas, a map toggle, touch/pointer pan and pinch zoom, and name previews on hover/focus/long-press for map numbers. Returning to the list URL restores the selected store and list. “Edit aisle” links open the existing item placement editor in a new tab, with the store and item preselected. Shopping script cache version: `20261023-shopping-mode4`.
+- Product/store representation standards are summarized in `ARCHITECTURE.md` under “Product and store-map standards”: GPC/GDM for optional product classification and trade-item data, IMDF for possible indoor map exchange, and IndoorGML for future indoor routing. Keep store aisle order, categories, and item placements as editable Market Day data.
 - PostgreSQL stores user data and Spring Session JDBC login sessions. Sessions are configured to expire after 90 days of inactivity; they should survive app container and machine restarts. The previous suggestion that rebuilding erased the server-side login was incorrect.
 - PostgreSQL data is in the `postgres_data` named volume. Do not run `docker compose down -v` unless intentionally deleting the database.
 
@@ -55,7 +57,7 @@ The app image was rebuilt and restarted with the store-ID check fix; container i
 
 ## Follow-up TODOs
 
-- [ ] Fix early wrapping in the “All list items” view. On the “Winco Groceries” list, aisle groups 2, 4, 5, and 6 appear left to right, but the row wraps before aisles 7, 8, and 9; those groups should continue to the right when space allows.
+- [x] Updated the “All list items” view to follow the map’s aisle rows and columns. Group positions now come from aisle grid coordinates; horizontal aisles span their map length. Names wrap naturally, and the index can scroll horizontally when its map-aligned columns need more room. Cache versions: `20261023-aisle-index-map1` / `20261023-aisle-index-map2`.
 
 ## Earlier deployment notes
 

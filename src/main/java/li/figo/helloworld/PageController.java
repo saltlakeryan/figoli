@@ -18,4 +18,7 @@ class PageController {
 
     @GetMapping({"/market", "/market/", "/app1", "/app1/"})
     ModelAndView marketDay() { return new ModelAndView("forward:/market/index.html"); }
+
+    @GetMapping("/market/shopping")
+    ModelAndView shoppingMode() { return new ModelAndView("forward:/market/shopping.html"); }
 }

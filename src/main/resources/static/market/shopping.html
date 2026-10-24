@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f7f7f3">
+  <title>Shopping mode — figo.li</title>
+  <link rel="stylesheet" href="/styles.css?v=20261023-shopping-mode1">
+  <link rel="stylesheet" href="/shopping.css?v=20261023-shopping-mode2">
+</head>
+<body class="shopping-page">
+  <header class="shopping-toolbar">
+    <a id="shopping-back" class="shopping-back" href="/market/" aria-label="Back to list">← <span>List</span></a>
+    <div class="shopping-title"><strong id="shopping-list-name">Shopping mode</strong><small id="shopping-progress"></small></div>
+    <button id="shopping-view-toggle" class="shopping-view-toggle" type="button">Map view</button>
+  </header>
+  <main id="shopping-main" class="shopping-main">
+    <div class="shopping-zoom-controls" aria-label="View controls">
+      <button type="button" data-zoom="in" aria-label="Zoom in">＋</button>
+      <button type="button" data-zoom="out" aria-label="Zoom out">−</button>
+      <button type="button" data-zoom="reset" aria-label="Fit view">Fit</button>
+    </div>
+    <div id="shopping-viewport" class="shopping-viewport" aria-label="Shopping list view">
+      <div id="shopping-canvas" class="shopping-canvas"></div>
+    </div>
+    <div id="shopping-preview" class="shopping-preview" hidden></div>
+    <div id="shopping-notice" class="shopping-notice" role="alert" aria-live="assertive" hidden></div>
+  </main>
+  <script src="/map-position.js?v=20261022-map-markers2" defer></script>
+  <script src="/shopping.js?v=20261023-shopping-mode4" defer></script>
+</body>
+</html>
